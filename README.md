@@ -1,70 +1,160 @@
+# 🧾 Order Management App
+
+A production-ready **Order Management System** built using the **Frappe Framework** as a technical assessment. The application demonstrates end-to-end business process implementation, including inventory management, workflow automation, role-based security, reporting, and REST API integration.
+
 ---
 
-# 🧾 Order Management App (Frappe Custom App)
+# ✨ Features
 
-This application is a production-ready internal order tracking system built as a technical assessment. It demonstrates a full-stack implementation using the Frappe Framework, focusing on inventory integrity, automated workflows, and RESTful integration.
+### 📦 Order Management
 
-## 🚀 Installation Steps
+* Create and manage customer orders.
+* Server-side validation to prevent invalid submissions.
+* Mandatory item validation before saving orders.
 
-To install and set up this app on your local Frappe environment:
+### 📊 Inventory Management
 
-1. **install the App:**
+* Automatic stock validation before confirmation.
+* Inventory is reduced automatically when an order is confirmed.
+* Prevents confirmation when sufficient stock is unavailable.
+
+### 🔄 Workflow
+
+* Order lifecycle managed through a workflow:
+
+  * **Draft**
+  * **Confirmed**
+  * **Cancelled**
+* Workflow actions are controlled through user roles.
+
+### 👥 Role-Based Access Control
+
+* Separate permissions for **User** and **Manager**.
+* Managers control workflow approvals and cancellations.
+* Users can create and manage their own orders.
+
+### ⚡ Client-Side Enhancements
+
+* Automatic total amount calculation.
+* Real-time stock availability warnings.
+* Improved user experience through instant field updates.
+
+### 📈 Reports & Dashboard
+
+* SQL-based Script Reports.
+* Dashboard Chart showing order statistics by status.
+
+### 🌐 REST API
+
+* Whitelisted API for fetching confirmed orders.
+* Supports optional date filters for integrations.
+
+---
+
+# 🚀 Installation
+
+## 1. Create a Bench
+
+Follow the official Frappe installation guide and create a bench.
+
+Start the development server:
+
 ```bash
-bench new-app order_management
-
+bench start
 ```
 
+Open another terminal.
 
-2. **Install to Site:**
+---
+
+## 2. Create a Site
+
 ```bash
-bench --site mysite.local install-app order_management
-
+bench new-site testsite.localhost
 ```
 
+---
 
-3. **Database Migration & Seeding:**
-This command will run the patch that automatically fetches sample data from **DummyJSON** and seeds the Item and Customer DocTypes.
+## 3. Get the Application
+
 ```bash
-bench migrate
-
+bench get-app https://github.com/Nagaraj-62/order-Management-App
 ```
 
+---
 
-4. **Build Assets:**
+## 4. Install the App
+
+```bash
+bench --site testsite.localhost install-app order_management
+```
+
+---
+
+## 5. Run Database Migration
+
+The application includes a migration patch that automatically downloads sample data from **DummyJSON** and populates the following DocTypes:
+
+* Customer
+* Item
+
+Run:
+
+```bash
+bench --site testsite.localhost migrate
+```
+
+---
+
+## 6. Build Assets
+
 ```bash
 bench build
-
 ```
 
+---
 
+## 7. Open the Application
+
+```
+http://testsite.localhost:8000
+```
+
+Login with your Administrator credentials.
 
 ---
 
-## ✨ Features Implemented
+# 🌐 REST API
 
-The app covers  technical requirements from the project brief:
+## Endpoint
 
-* **Logic:** Server-side validation for stock availability and mandatory item checks.
-* **Inventory:** Automated stock reduction logic upon "Confirmed" status.
-* **UX:** Client-side scripts for real-time total calculations and stock warnings.
-* **Workflow:** Managed state transitions from `Draft` ➔ `Confirmed` ➔ `Cancelled`.
-* **Security:** Role-based access control (RBAC) separating `User` and `Manager` capabilities.
-* **Analytics:** SQL-based Script Reports and a Dashboard chart for order status.
+```
+GET /api/method/order_management.api.get_orders
+```
+
+### Description
+
+Returns all **Confirmed** orders along with customer information and order items.
 
 ---
 
-## 🌐 API Endpoint Details
+## Optional Parameters
 
-The app exposes a whitelisted REST API for third-party integration.
+| Parameter | Description             |
+| --------- | ----------------------- |
+| from_date | Start date (YYYY-MM-DD) |
+| to_date   | End date (YYYY-MM-DD)   |
 
-* **Endpoint:** `GET /api/method/order_management.api.get_orders`
-* **Description:** Fetches all orders with a status of "Confirmed," including customer details and child table items.
-* **Parameters:**
-* `from_date` (Optional): Start date filter (YYYY-MM-DD).
-* `to_date` (Optional): End date filter (YYYY-MM-DD).
+Example:
 
+```
+GET /api/method/order_management.api.get_orders?from_date=2026-03-01&to_date=2026-03-31
+```
 
-* **Response Format:**
+---
+
+## Sample Response
+
 ```json
 {
   "message": {
@@ -83,41 +173,62 @@ The app exposes a whitelisted REST API for third-party integration.
             "amount": 198
           }
         ]
-     }
+      }
+    ]
+  }
 }
-
 ```
 
-
-
 ---
 
-## 📸 Screenshots
+# 🧪 Running Unit Tests
 
-
-1. **Sales Order UI:**
-   <img width="1767" height="727" alt="Screenshot 2026-03-02 111655" src="https://github.com/user-attachments/assets/28d4ac5f-38dc-4415-84bb-dec210fe1316" />
-
-3. **Workflow Configuration:**
-   <img width="1364" height="387" alt="Screenshot 2026-03-02 111756" src="https://github.com/user-attachments/assets/5ce8a91e-c381-4e9f-8d4d-dc37689939d8" />
-   <img width="1388" height="348" alt="Screenshot 2026-03-02 111819" src="https://github.com/user-attachments/assets/23fc5f35-7cf1-429b-ad85-a1e8efd382a8" />
-
-5. **Role Permissions:**
-   <img width="1828" height="743" alt="Screenshot 2026-03-02 104911" src="https://github.com/user-attachments/assets/f93b8616-f955-4483-90aa-8644a0847022" />
-
-6. **Custom Dashboard:**
-   <img width="1377" height="701" alt="image" src="https://github.com/user-attachments/assets/70aeb177-ad0c-48f2-80b4-5ccf6df3c5da" />
-
-
----
-
-## 🧪 Unit Testing
-
-I have included a unit test suite to verify the core business logic.
+Execute the test suite using:
 
 ```bash
-bench --site mysite.local run-tests --app order_management
-
+bench --site testsite.localhost run-tests --app order_management
 ```
+
+The tests validate the application's core business logic and ensure reliable functionality.
+
+---
+
+# 📸 Screenshots
+
+## Sales Order
+
+<img width="1767" height="727" alt="Sales Order" src="https://github.com/user-attachments/assets/28d4ac5f-38dc-4415-84bb-dec210fe1316" />
+
+---
+
+## Workflow Configuration
+
+<img width="1364" height="387" alt="Workflow 1" src="https://github.com/user-attachments/assets/5ce8a91e-c381-4e9f-8d4d-dc37689939d8" />
+
+<img width="1388" height="348" alt="Workflow 2" src="https://github.com/user-attachments/assets/23fc5f35-7cf1-429b-ad85-a1e8efd382a8" />
+
+---
+
+## Role Permissions
+
+<img width="1828" height="743" alt="Role Permissions" src="https://github.com/user-attachments/assets/f93b8616-f955-4483-90aa-8644a0847022" />
+
+---
+
+## Dashboard
+
+<img width="1377" height="701" alt="Dashboard" src="https://github.com/user-attachments/assets/70aeb177-ad0c-48f2-80b4-5ccf6df3c5da" />
+
+---
+
+# 🛠️ Technology Stack
+
+* Frappe Framework
+* Python
+* JavaScript
+* MariaDB
+* SQL
+* HTML
+* CSS
 
 ---
