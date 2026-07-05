@@ -1,0 +1,166 @@
+<div class="om-app">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  html, body{ margin:0; padding:0; overflow-x:hidden; }
+  .om-app{ width:100%; }
+  .om-app{
+    --ink:#14231c; --paper:#f6f7f2; --panel:#ffffff;
+    --forest:#1f7a5c; --forest-dk:#153f2f; --lime:#ddf26d;
+    --rust:#b7431a; --line:#e3e6dd; --muted:#5b6a60;
+    font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); min-height:100vh;
+  }
+.om-app{
+  /* remove background-color so Frappe's own card background shows through */
+  background: transparent;
+  font-family:'Inter',sans-serif; color:var(--ink); min-height:auto;
+}
+
+.om-signup-wrap{
+  max-width:400px; margin:0 auto;
+  padding:0; /* was 2rem 1rem 0.5rem — this padding + the paper bg was creating the visible outer box */
+}
+  .om-signup-head{text-align:center; margin-bottom:0.5rem;}
+  .om-signup-head .dot{width:9px; height:9px; border-radius:50%; background:var(--lime); display:inline-block; margin-bottom:.8rem;}
+  .om-signup-head h1{font-size:1.6rem; margin:0 0 .3rem;}
+  .om-signup-head p{color:var(--muted); font-size:.88rem; margin:0;}
+
+  .om-form{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1.8rem;}
+  .om-field{margin-bottom:1.1rem;}
+  .om-field label{display:block; font-size:.78rem; font-weight:600; color:var(--muted); margin-bottom:.4rem;}
+  .om-field input{
+    width:100%; padding:.7rem .8rem; border:1px solid var(--line); border-radius:8px;
+    font-size:.9rem; font-family:'Inter',sans-serif; color:var(--ink); background:#fbfcfa;
+    transition:border-color .15s;
+  }
+  .om-field input:focus{outline:none; border-color:var(--forest);}
+  .om-field.error input{border-color:var(--rust);}
+  .om-field-msg{font-size:.75rem; color:var(--rust); margin-top:.3rem; display:none;}
+  .om-field.error .om-field-msg{display:block;}
+
+  .om-submit{
+    width:100%; background:var(--forest); color:#fff; border:none; padding:.8rem;
+    border-radius:8px; font-weight:700; font-size:.92rem; cursor:pointer; margin-top:.4rem;
+    transition:background .15s;
+  }
+  .om-submit:hover{background:var(--forest-dk);}
+  .om-submit:disabled{background:#c9d1c9; cursor:not-allowed;}
+
+  .om-banner{
+    padding:.7rem .9rem; border-radius:8px; font-size:.85rem; margin-bottom:1.1rem; display:none;
+  }
+  .om-banner.show{display:block;}
+  .om-banner.err{background:#f3dcd4; color:var(--rust);}
+  .om-banner.ok{background:#dcefe2; color:var(--forest-dk);}
+
+  .om-signin-link{text-align:center; margin-top:1.3rem; font-size:.85rem; color:var(--muted);}
+  .om-signin-link a{color:var(--forest); font-weight:600; text-decoration:none;}
+</style>
+
+<div class="om-signup-wrap">
+ <div class="om-banner" id="om-banner"></div>
+
+  <form class="om-form" id="om-signup-form" novalidate>
+    <div class="om-field" id="fld-name">
+      <label for="full_name">Full name</label>
+      <input type="text" id="full_name" autocomplete="name" placeholder="Jane Doe">
+      <div class="om-field-msg">Please enter your full name.</div>
+    </div>
+
+    <div class="om-field" id="fld-email">
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="email" placeholder="jane@example.com">
+      <div class="om-field-msg">Please enter a valid email address.</div>
+    </div>
+
+    <div class="om-field" id="fld-password">
+      <label for="password">Password</label>
+      <input type="password" id="password" autocomplete="new-password" placeholder="At least 6 characters">
+      <div class="om-field-msg">Password must be at least 6 characters.</div>
+    </div>
+
+    <div class="om-field" id="fld-confirm">
+      <label for="confirm_password">Confirm password</label>
+      <input type="password" id="confirm_password" autocomplete="new-password" placeholder="Re-enter your password">
+      <div class="om-field-msg">Passwords don't match.</div>
+    </div>
+
+    <button type="submit" class="om-submit" id="om-submit-btn">Create account</button>
+  </form>
+
+  <div class="om-signin-link">Already have an account? <a href="/login">Log in</a></div>
+</div>
+</div>
+
+<script>
+frappe.ready(function(){
+  var form = document.getElementById('om-signup-form');
+  var btn = document.getElementById('om-submit-btn');
+  var banner = document.getElementById('om-banner');
+
+  function showBanner(msg, kind){
+    banner.innerText = msg;
+    banner.className = 'om-banner show ' + kind;
+  }
+
+  function clearFieldError(id){
+    document.getElementById(id).classList.remove('error');
+  }
+
+  function setFieldError(id){
+    document.getElementById(id).classList.add('error');
+  }
+
+  function validate(){
+    var ok = true;
+    var name = document.getElementById('full_name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var pass = document.getElementById('password').value;
+    var confirm = document.getElementById('confirm_password').value;
+
+    ['fld-name','fld-email','fld-password','fld-confirm'].forEach(clearFieldError);
+
+    if (!name){ setFieldError('fld-name'); ok = false; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setFieldError('fld-email'); ok = false; }
+    if (!pass || pass.length < 6){ setFieldError('fld-password'); ok = false; }
+    if (pass !== confirm){ setFieldError('fld-confirm'); ok = false; }
+
+    return ok ? { full_name: name, email: email, password: pass } : null;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    banner.className = 'om-banner';
+
+    var data = validate();
+    if (!data) return;
+
+    btn.disabled = true;
+    btn.innerText = 'Creating account…';
+
+    frappe.call({
+      method: 'order_management.api.register_customer',
+      args: data,
+      callback: function(r){
+        if (r.message && r.message.status === 'success'){
+          showBanner('Account created! Taking you to the shop…', 'ok');
+          setTimeout(function(){ window.location.href = '/shop'; }, 900);
+        } else {
+          showBanner((r.message && r.message.message) || 'Could not create your account.', 'err');
+          btn.disabled = false;
+          btn.innerText = 'Create account';
+        }
+      },
+      error: function(err){
+        var msg = (err && err.responseJSON && err.responseJSON._server_messages)
+          ? 'That email may already be registered.'
+          : 'Something went wrong. Please try again.';
+        showBanner(msg, 'err');
+        btn.disabled = false;
+        btn.innerText = 'Create account';
+      }
+    });
+  });
+});
+</script>

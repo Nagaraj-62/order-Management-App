@@ -1,0 +1,73 @@
+{
+ "app": "Order Management",
+ "charts": [
+  {
+   "chart_name": "Sales Analytics",
+   "label": "Sales Analytics"
+  }
+ ],
+ "content": "[{\"id\":\"yvPj2tn_kg\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Order Management</span>\",\"col\":12}},{\"id\":\"aRhm2aNZzI\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Orders Today\",\"col\":3}},{\"id\":\"P__vZvIkv8\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"total Revenue Today\",\"col\":3}},{\"id\":\"o8sQgzEod1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Customers Till Date\",\"col\":3}},{\"id\":\"yB7_13-Ffp\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Orders Till Today\",\"col\":3}},{\"id\":\"Uq_49vM89Q\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Sales Analytics\",\"col\":12}},{\"id\":\"ccpqTsE1h7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Create Item\",\"col\":3}}]",
+ "creation": "2026-06-04 00:05:38.254657",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "archive-restore",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Order Management",
+ "link_type": "DocType",
+ "links": [],
+ "modified": "2026-07-05 15:52:48.408624",
+ "modified_by": "Administrator",
+ "module": "Order Management",
+ "name": "Order Management",
+ "number_cards": [
+  {
+   "label": "Total Orders Today",
+   "number_card_name": "Total Orders Today"
+  },
+  {
+   "label": "Customers Till Date",
+   "number_card_name": "Customers Till Days"
+  },
+  {
+   "label": "total Revenue Today",
+   "number_card_name": "total Revenue Today"
+  },
+  {
+   "label": "Orders Till Today",
+   "number_card_name": "Orders Till Today"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Administrator"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Sales User"
+  }
+ ],
+ "sequence_id": 23.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "New",
+   "label": "Create Item",
+   "link_to": "Item",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Order Management",
+ "type": "Workspace"
+}

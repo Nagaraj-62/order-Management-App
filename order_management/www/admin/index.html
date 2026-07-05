@@ -1,0 +1,165 @@
+{% extends "templates/web.html" %}
+
+{% block content %}
+<div class="om-app">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  .om-app{
+    --ink:#14231c; --paper:#f6f7f2; --panel:#ffffff;
+    --forest:#1f7a5c; --forest-dk:#153f2f; --lime:#ddf26d;
+    --rust:#b7431a; --amber:#c98a1c; --line:#e3e6dd; --muted:#5b6a60;
+    font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); min-height:100vh;
+  }
+  .om-app *{box-sizing:border-box;}
+  .om-app h1,.om-app h2{font-family:'Fraunces',serif; letter-spacing:-0.01em;}
+  .om-nums{font-family:'IBM Plex Mono',monospace;}
+  .web-footer{display:none;}
+  .om-wrap{max-width:1180px; margin:0 auto; padding:2rem 1.5rem 4rem;}
+  .om-wrap h1{font-size:1.6rem; margin:0 0 1.6rem;}
+
+  .om-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1rem; margin-bottom:2rem;}
+  .om-kpi{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem;}
+  .om-kpi .label{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; margin-bottom:.4rem;}
+  .om-kpi .value{font-family:'IBM Plex Mono',monospace; font-size:1.7rem; font-weight:600;}
+  .om-kpi.accent{background:var(--forest-dk); color:#fff; border-color:var(--forest-dk);}
+  .om-kpi.accent .label{color:var(--lime);}
+  .om-kpi.warn .value{color:var(--rust);}
+
+  .om-grid2{display:grid; grid-template-columns:1.4fr 1fr; gap:1.4rem;}
+  @media(max-width:900px){ .om-grid2{grid-template-columns:1fr;} }
+
+  .om-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem; margin-bottom:1.4rem;}
+  .om-panel h2{font-size:1.05rem; margin:0 0 1rem;}
+
+  table.om-table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  table.om-table th{text-align:left; color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; padding-bottom:.6rem; border-bottom:1px solid var(--line);}
+  table.om-table td{padding:.55rem 0; border-bottom:1px solid var(--line);}
+  table.om-table tr:last-child td{border-bottom:none;}
+  .om-status-pill{font-size:.68rem; font-weight:700; padding:.2rem .55rem; border-radius:999px; display:inline-block;}
+  .om-status-pill.Draft{background:#f1ead0; color:var(--amber);}
+  .om-status-pill.Confirmed{background:#dcefe2; color:var(--forest-dk);}
+  .om-status-pill.Cancelled{background:#f3dcd4; color:var(--rust);}
+
+  .om-bar-row{display:flex; align-items:center; gap:.6rem; margin-bottom:.7rem; font-size:.82rem;}
+  .om-bar-row .lbl{width:90px; flex-shrink:0; color:var(--muted);}
+  .om-bar-track{flex:1; height:8px; background:#eef1e7; border-radius:99px; overflow:hidden;}
+  .om-bar-fill{height:100%; background:var(--forest); border-radius:99px;}
+  .om-bar-row .cnt{width:28px; text-align:right; font-family:'IBM Plex Mono',monospace;}
+
+  .om-low-stock li{display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--line); font-size:.85rem;}
+  .om-low-stock li:last-child{border-bottom:none;}
+  .om-low-stock .qty{font-family:'IBM Plex Mono',monospace; color:var(--rust); font-weight:600;}
+  ul.om-low-stock{list-style:none; margin:0; padding:0;}
+
+  .om-loading{color:var(--muted); font-size:.9rem; padding:1rem 0;}
+</style>
+
+
+
+<div class="om-wrap">
+  <h1>Operations dashboard</h1>
+
+  <div class="om-kpis" id="om-kpis">
+    <div class="om-loading">Loading stats…</div>
+  </div>
+
+  <div class="om-grid2">
+    <div>
+      <div class="om-panel">
+        <h2>Recent orders</h2>
+        <table class="om-table" id="om-recent">
+          <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th style="text-align:right;">Total</th></tr></thead>
+          <tbody><tr><td colspan="4" class="om-loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="om-panel">
+        <h2>Top customers</h2>
+        <table class="om-table" id="om-top-customers">
+          <thead><tr><th>Customer</th><th style="text-align:right;">Revenue</th></tr></thead>
+          <tbody><tr><td colspan="2" class="om-loading">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="om-panel">
+        <h2>Orders by status</h2>
+        <div id="om-status-bars"><div class="om-loading">Loading…</div></div>
+      </div>
+      <div class="om-panel">
+        <h2>Low stock alerts</h2>
+        <ul class="om-low-stock" id="om-low-stock"><li class="om-loading">Loading…</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+frappe.ready(function(){
+  frappe.call({
+    method: 'order_management.api.get_dashboard_stats',
+    callback: function(r){
+      if (!r.message) return;
+      var d = r.message;
+      renderKpis(d);
+      renderRecent(d.recent_orders || []);
+      renderTopCustomers(d.top_customers || []);
+      renderStatusBars(d.status_data || []);
+      renderLowStock(d.low_stock_items || []);
+    },
+    error: function(){
+      document.getElementById('om-kpis').innerHTML = '<div class="om-loading">Could not load dashboard stats.</div>';
+    }
+  });
+
+  function renderKpis(d){
+    document.getElementById('om-kpis').innerHTML =
+      '<div class="om-kpi accent"><div class="label">Revenue (confirmed)</div><div class="value">₹'+Number(d.revenue||0).toFixed(2)+'</div></div>' +
+      '<div class="om-kpi"><div class="label">Total orders</div><div class="value">'+d.total_orders+'</div></div>' +
+      '<div class="om-kpi"><div class="label">Confirmed</div><div class="value">'+d.confirmed_orders+'</div></div>' +
+      '<div class="om-kpi"><div class="label">Draft</div><div class="value">'+d.draft_orders+'</div></div>' +
+      '<div class="om-kpi warn"><div class="label">Low stock items</div><div class="value">'+d.low_stock_count+'</div></div>';
+  }
+
+  function renderRecent(rows){
+    var tbody = document.querySelector('#om-recent tbody');
+    if (!rows.length){ tbody.innerHTML = '<tr><td colspan="4" class="om-loading">No orders yet.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(function(o){
+      return '<tr><td class="om-nums">'+o.name+'</td><td>'+o.customer+'</td>' +
+        '<td><span class="om-status-pill '+o.status+'">'+o.status+'</span></td>' +
+        '<td style="text-align:right;" class="om-nums">₹'+Number(o.total_amount||0).toFixed(2)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTopCustomers(rows){
+    var tbody = document.querySelector('#om-top-customers tbody');
+    if (!rows.length){ tbody.innerHTML = '<tr><td colspan="2" class="om-loading">No confirmed orders yet.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(function(c){
+      return '<tr><td>'+c.customer+'</td><td style="text-align:right;" class="om-nums">₹'+Number(c.revenue||0).toFixed(2)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderStatusBars(rows){
+    var wrap = document.getElementById('om-status-bars');
+    if (!rows.length){ wrap.innerHTML = '<div class="om-loading">No data yet.</div>'; return; }
+    var max = Math.max.apply(null, rows.map(function(r){ return r.count; }));
+    wrap.innerHTML = rows.map(function(r){
+      var pct = max ? Math.round((r.count/max)*100) : 0;
+      return '<div class="om-bar-row"><span class="lbl">'+r.status+'</span>' +
+        '<div class="om-bar-track"><div class="om-bar-fill" style="width:'+pct+'%"></div></div>' +
+        '<span class="cnt">'+r.count+'</span></div>';
+    }).join('');
+  }
+
+  function renderLowStock(rows){
+    var ul = document.getElementById('om-low-stock');
+    if (!rows.length){ ul.innerHTML = '<li>All items well stocked.</li>'; return; }
+    ul.innerHTML = rows.map(function(i){
+      return '<li><span>'+i.item_name+'</span><span class="qty">'+i.stock+' left</span></li>';
+    }).join('');
+  }
+});
+</script>
+{% endblock %}

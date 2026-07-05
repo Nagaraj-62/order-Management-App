@@ -1,0 +1,82 @@
+{
+ "app": "order_management",
+ "creation": "2026-06-04 00:13:42.413931",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "biceps-flexed",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "list",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Admin",
+   "link_type": "URL",
+   "open_in_new_tab": 0,
+   "show_arrow": 0,
+   "type": "Link",
+   "url": "/admin"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "baggage-claim",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Order Management",
+   "link_to": "Order Management",
+   "link_type": "Workspace",
+   "open_in_new_tab": 1,
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "list",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "sales Order",
+   "link_to": "Sales Order",
+   "link_type": "DocType",
+   "open_in_new_tab": 1,
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "boxes",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Item",
+   "link_to": "Item",
+   "link_type": "DocType",
+   "open_in_new_tab": 1,
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "customer",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Customer",
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "open_in_new_tab": 1,
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-05 16:52:07.042931",
+ "modified_by": "Administrator",
+ "module": "Order Management",
+ "name": "Order Management",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Order Management"
+}

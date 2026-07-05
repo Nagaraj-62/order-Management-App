@@ -60,15 +60,20 @@ def insert_items():
         item_name = product.get("title")
         price = product.get("price")
         stock = product.get("stock", 50)
+        image_url = product.get("thumbnail")
+        description = product.get("description")
 
         if frappe.db.exists("Item", {"item_name": item_name}):
             continue
-
+            # frappe.set_value("Item", item_name, {
+            #     "custom_item_image": image_url,
+            #     "custom_description": description
+            # })
         frappe.get_doc({
             "doctype": "Item",
             "item_name": item_name,
             "price": price,
-            "stock": stock
+            "stock": stock,
+            "custom_image": image_url,
+            "custom_description": description
         }).insert()
-        
-execute()

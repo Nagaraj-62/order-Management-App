@@ -1,0 +1,197 @@
+{% extends "templates/web.html" %}
+
+{% block content %}
+<div class="om-app">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  .om-app{
+    --ink:#14231c; --paper:#f6f7f2; --panel:#ffffff;
+    --forest:#1f7a5c; --forest-dk:#153f2f; --lime:#ddf26d;
+    --rust:#b7431a; --line:#e3e6dd; --muted:#5b6a60;
+    font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); min-height:100vh;
+  }
+  .om-app *{box-sizing:border-box;}
+  .om-app h1,.om-app h2{font-family:'Fraunces',serif; letter-spacing:-0.01em;}
+  .om-nums{font-family:'IBM Plex Mono',monospace;}
+  .web-footer{display:none;}
+
+  .om-wrap{max-width:820px; margin:0 auto; padding:2rem 1.5rem 4rem;}
+  .om-wrap h1{font-size:1.7rem; margin:0 0 1.4rem;}
+
+  .om-line{
+    display:flex; align-items:center; gap:1rem; background:var(--panel);
+    border:1px solid var(--line); border-radius:12px; padding:1rem; margin-bottom:.8rem;
+  }
+  .om-line-img{width:52px; height:52px; border-radius:8px; background:#eef1e7; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.3rem;}
+  .om-line-info{flex:1; min-width:0;}
+  .om-line-name{font-weight:600; font-size:.95rem;}
+  .om-line-rate{color:var(--muted); font-size:.8rem; margin-top:.15rem;}
+  .om-line-stepper{display:flex; align-items:center; gap:.6rem; background:#eef5ee; border:1px solid var(--forest); border-radius:999px; padding:.25rem .4rem;}
+  .om-line-stepper button{background:none; border:none; width:1.6rem; height:1.6rem; font-weight:700; color:var(--forest-dk); cursor:pointer;}
+  .om-line-total{font-family:'IBM Plex Mono',monospace; font-weight:600; min-width:5rem; text-align:right;}
+  .om-line-remove{background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:.2rem .4rem;}
+  .om-line-remove:hover{color:var(--rust);}
+
+  .om-empty{text-align:center; padding:4rem 1rem; color:var(--muted);}
+  .om-empty .ico{font-size:2.6rem; display:block; margin-bottom:.6rem;}
+  .om-empty a{color:var(--forest); font-weight:600; text-decoration:none;}
+
+  .om-summary{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.3rem; margin-top:1.5rem;}
+  .om-summary-row{display:flex; justify-content:space-between; font-size:.9rem; margin-bottom:.6rem; color:var(--muted);}
+  .om-summary-total{display:flex; justify-content:space-between; font-size:1.15rem; font-weight:700; border-top:1px dashed var(--line); padding-top:.8rem; margin-top:.4rem;}
+  .om-summary-total .om-nums{color:var(--forest-dk);}
+  .om-checkout{
+    width:100%; margin-top:1.2rem; background:var(--forest); color:#fff; border:none;
+    padding:.9rem; border-radius:10px; font-weight:700; font-size:.95rem; cursor:pointer; transition:background .15s;
+  }
+  .om-checkout:hover{background:var(--forest-dk);}
+  .om-checkout:disabled{background:#c9d1c9; cursor:not-allowed;}
+
+  .om-modal-backdrop{position:fixed; inset:0; background:rgba(20,35,28,.5); display:none; align-items:center; justify-content:center; z-index:1000;}
+  .om-modal-backdrop.show{display:flex;}
+  .om-modal{background:#fff; border-radius:14px; padding:2rem; max-width:360px; text-align:center;}
+  .om-modal h3{margin:0 0 .5rem;}
+  .om-modal p{color:var(--muted); font-size:.9rem; margin:0 0 1.2rem;}
+  .om-modal button{background:var(--forest); color:#fff; border:none; padding:.65rem 1.4rem; border-radius:999px; font-weight:600; cursor:pointer;}
+</style>
+
+
+<div class="om-wrap">
+  <h1>Your basket</h1>
+  <div id="om-lines"></div>
+  <div class="om-summary" id="om-summary" style="display:none;">
+    <div class="om-summary-row"><span>Subtotal</span><span class="om-nums" id="om-subtotal">₹0.00</span></div>
+    <div class="om-summary-row"><span>Delivery</span><span>Free</span></div>
+    <div class="om-summary-total"><span>Total</span><span class="om-nums" id="om-total">₹0.00</span></div>
+    <button class="om-checkout" id="om-checkout">Place order</button>
+  </div>
+</div>
+
+<div class="om-modal-backdrop" id="om-modal">
+  <div class="om-modal">
+    <h3>Sign in required</h3>
+    <p>Log in to place your order — it only takes a moment.</p>
+    <button onclick="window.location.href='/login'">Go to login</button>
+  </div>
+</div>
+</div>
+
+<script>
+frappe.ready(function(){
+  var CART_KEY = 'om_cart_v1';
+  var cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+
+  function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+  function render(){
+    var linesEl = document.getElementById('om-lines');
+    var keys = Object.keys(cart);
+    linesEl.innerHTML = '';
+
+    if (!keys.length){
+      linesEl.innerHTML = '<div class="om-empty"><span class="ico">🧺</span>Your basket is empty.<br><a href="/shop">Browse the shop →</a></div>';
+      document.getElementById('om-summary').style.display = 'none';
+      return;
+    }
+
+    var subtotal = 0;
+    keys.forEach(function(code){
+      var item = cart[code];
+      var rowTotal = item.qty * item.price;
+      subtotal += rowTotal;
+      var row = document.createElement('div');
+      row.className = 'om-line';
+      row.innerHTML =
+        '<div class="om-line-img">'+(item.custom_item_image ||'🌿' )+'</div>' +
+        '<div class="om-line-info">' +
+          '<div class="om-line-name">' + item.item_name + '</div>' +
+          '<div class="om-line-rate om-nums">₹' + item.price.toFixed(2) + ' each</div>' +
+        '</div>' +
+        '<div class="om-line-stepper">' +
+          '<button class="om-minus" data-code="'+code+'">−</button>' +
+          '<span class="om-nums">'+item.qty+'</span>' +
+          '<button class="om-plus" data-code="'+code+'">+</button>' +
+        '</div>' +
+        '<div class="om-line-total om-nums">₹'+rowTotal.toFixed(2)+'</div>' +
+        '<button class="om-line-remove" data-code="'+code+'">✕</button>';
+      linesEl.appendChild(row);
+    });
+
+    document.getElementById('om-summary').style.display = 'block';
+    document.getElementById('om-subtotal').innerText = '₹' + subtotal.toFixed(2);
+    document.getElementById('om-total').innerText = '₹' + subtotal.toFixed(2);
+  }
+
+  document.getElementById('om-lines').addEventListener('click', function(e){
+    var code = e.target.dataset.code;
+    if (!code) return;
+    if (e.target.classList.contains('om-plus')){
+      if (cart[code].qty >= (cart[code].maxStock || 999)){
+        frappe.show_alert({message:'No more stock available', indicator:'orange'});
+        return;
+      }
+      cart[code].qty += 1;
+    } else if (e.target.classList.contains('om-minus')){
+      cart[code].qty -= 1;
+      if (cart[code].qty <= 0) delete cart[code];
+    } else if (e.target.classList.contains('om-line-remove')){
+      delete cart[code];
+    }
+    saveCart();
+    render();
+  });
+
+  document.getElementById('om-checkout').addEventListener('click', function(){
+    var btn = this;
+    frappe.call({
+      method: 'order_management.api.get_current_user_info',
+      callback: function(r){
+        if (r.message && !r.message.logged_in){
+          document.getElementById('om-modal').classList.add('show');
+          return;
+        }
+        placeOrder(btn);
+      }
+    });
+  });
+
+  function placeOrder(btn){
+    var payload = {};
+    Object.keys(cart).forEach(function(code){ payload[code] = cart[code].qty; });
+
+    btn.disabled = true;
+    btn.innerText = 'Placing order…';
+
+    frappe.call({
+      method: 'order_management.api.place_storefront_order',
+      args: { cart_json: JSON.stringify(payload) },
+      callback: function(r){
+        if (r.message && r.message.status === 'success'){
+          cart = {};
+          saveCart();
+          render();
+          frappe.msgprint({
+            title: 'Order placed',
+            message: r.message.message + '<br><span class="om-nums">Order #' + r.message.order_id + '</span>',
+            indicator: 'green'
+          });
+        } else {
+          frappe.show_alert({message: (r.message && r.message.message) || 'Could not place order', indicator:'red'});
+        }
+        btn.disabled = false;
+        btn.innerText = 'Place order';
+      },
+      error: function(){
+        frappe.show_alert({message:'Network error — please try again', indicator:'red'});
+        btn.disabled = false;
+        btn.innerText = 'Place order';
+      }
+    });
+  }
+
+  render();
+});
+</script>
+{% endblock %}

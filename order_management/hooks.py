@@ -19,6 +19,12 @@ scheduler_events = {
         "order_management.tasks.daily_cancel_check"
     ]
 }
+
+signup_form_template = "order_management.www.signup.signup.get_context"
+#
+# Tells the engine to look inside public folder for static file assets
+app_artifacts_path = "public"
+
 # Apps
 # ------------------
 

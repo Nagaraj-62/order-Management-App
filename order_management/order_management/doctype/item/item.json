@@ -8,7 +8,11 @@
  "field_order": [
   "item_name",
   "price",
-  "stock"
+  "stock",
+  "column_break_vczd",
+  "item_group",
+  "image",
+  "uom"
  ],
  "fields": [
   {
@@ -28,12 +32,33 @@
    "fieldname": "stock",
    "fieldtype": "Int",
    "label": "Stock"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "item Group"
+  },
+  {
+   "fieldname": "column_break_vczd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-28 18:12:37.902465",
+ "modified": "2026-06-28 00:25:40.822812",
  "modified_by": "Administrator",
  "module": "Order Management",
  "name": "Item",

@@ -1,0 +1,151 @@
+{% extends "templates/web.html" %}
+
+{% block content %}
+<div class="om-app">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+    --ink:#14231c; --paper:#f6f7f2; --panel:#ffffff;
+    --forest:#1f7a5c; --forest-dk:#153f2f; --lime:#ddf26d;
+    --rust:#b7431a; --amber:#c98a1c; --line:#e3e6dd; --muted:#5b6a60;
+    font-family:'Inter',sans-serif; color:var(--ink); background:var(--paper); min-height:100vh;
+  }
+  .om-app *{box-sizing:border-box;}
+  .om-app h1,.om-app h2{font-family:'Fraunces',serif; letter-spacing:-0.01em;}
+  .om-nums{font-family:'IBM Plex Mono',monospace;}
+  .web-footer{display:none;}
+
+  .om-wrap{max-width:820px; margin:0 auto; padding:2rem 1.5rem 4rem;}
+  .om-wrap h1{font-size:1.6rem; margin:0 0 1.6rem;}
+
+  .om-order{background:var(--panel); border:1px solid var(--line); border-radius:12px; margin-bottom:.9rem; overflow:hidden;}
+  .om-order-head{display:flex; align-items:center; gap:1rem; padding:1rem 1.2rem; cursor:pointer;}
+  .om-order-head:hover{background:#fafbf8;}
+  .om-order-id{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:.85rem; width:110px; flex-shrink:0;}
+  .om-order-date{color:var(--muted); font-size:.82rem; width:100px; flex-shrink:0;}
+  .om-order-status{flex:1;}
+  .om-status-pill{font-size:.68rem; font-weight:700; padding:.25rem .6rem; border-radius:999px; display:inline-block;}
+  .om-status-pill.Draft{background:#f1ead0; color:var(--amber);}
+  .om-status-pill.Confirmed{background:#dcefe2; color:var(--forest-dk);}
+  .om-status-pill.Cancelled{background:#f3dcd4; color:var(--rust);}
+  .om-order-total{font-family:'IBM Plex Mono',monospace; font-weight:600; width:90px; text-align:right;}
+  .om-order-chevron{width:16px; text-align:center; color:var(--muted); transition:transform .2s;}
+  .om-order.open .om-order-chevron{transform:rotate(90deg);}
+
+  .om-order-body{display:none; padding:0 1.2rem 1.2rem; border-top:1px solid var(--line);}
+  .om-order.open .om-order-body{display:block;}
+
+  .om-items-list{margin:1rem 0; font-size:.85rem;}
+  .om-items-list .row{display:flex; justify-content:space-between; padding:.35rem 0; color:var(--muted);}
+
+  .om-timeline{margin-top:1rem;}
+  .om-timeline h3{font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700; margin:0 0 .8rem; font-family:'Inter',sans-serif;}
+  .om-tl-item{display:flex; gap:.8rem; position:relative; padding-bottom:1.1rem;}
+  .om-tl-item:last-child{padding-bottom:0;}
+  .om-tl-dot{width:10px; height:10px; border-radius:50%; background:var(--forest); margin-top:.3rem; flex-shrink:0; position:relative; z-index:1;}
+  .om-tl-item:not(:last-child)::before{
+    content:''; position:absolute; left:4.5px; top:14px; bottom:-2px; width:1.5px; background:var(--line);
+  }
+  .om-tl-status{font-weight:600; font-size:.88rem;}
+  .om-tl-time{color:var(--muted); font-size:.76rem; margin-top:.1rem;}
+
+  .om-empty{text-align:center; padding:4rem 1rem; color:var(--muted);}
+  .om-empty .ico{font-size:2.6rem; display:block; margin-bottom:.6rem;}
+  .om-empty a{color:var(--forest); font-weight:600; text-decoration:none;}
+  .om-loading{color:var(--muted); font-size:.88rem; padding:1rem 0;}
+</style>
+
+
+<div class="om-wrap">
+  <h1>Your order history</h1>
+  <div id="om-orders-list"><div class="om-loading">Loading your orders…</div></div>
+</div>
+</div>
+
+<script>
+frappe.ready(function(){
+    document.body.classList.add('om-full-bleed');
+  frappe.call({
+    method: 'order_management.api.get_user_orders',
+    callback: function(r){ renderOrders(r.message || []); },
+    error: function(){
+      document.getElementById('om-orders-list').innerHTML = '<div class="om-loading">Could not load your orders.</div>';
+    }
+  });
+
+  function renderOrders(orders){
+    var wrap = document.getElementById('om-orders-list');
+    if (!orders.length){
+      wrap.innerHTML = '<div class="om-empty"><span class="ico">📦</span>No orders yet.<br><a href="/shop">Start shopping →</a></div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    orders.forEach(function(o){
+      var card = document.createElement('div');
+      let status ;
+      if(o.status == 'Draft'){
+        status = "Order Placed";
+      }
+      else{
+        status=o.status;
+      }
+      card.className = 'om-order';
+      card.dataset.order = o.name;
+      card.innerHTML =
+        '<div class="om-order-head">' +
+          '<span class="om-order-id">'+o.name+'</span>' +
+          '<span class="om-order-date">'+o.order_date+'</span>' +
+          '<span class="om-order-status"><span class="om-status-pill '+o.status+'">'+ status +'</span></span>' +
+          '<span class="om-order-total">₹'+Number(o.total_amount||0).toFixed(2)+'</span>' +
+          '<span class="om-order-chevron">›</span>' +
+        '</div>' +
+        '<div class="om-order-body">' +
+          '<div class="om-items-list">' +
+            (o.items || []).map(function(i){
+              return '<div class="row"><span>'+i.item+' × '+i.quantity+'</span><span class="om-nums">₹'+Number(i.amount||0).toFixed(2)+'</span></div>';
+            }).join('') +
+          '</div>' +
+          '<div class="om-timeline"><h3>Status history</h3><div class="om-tl-body om-loading">Loading timeline…</div></div>' +
+        '</div>';
+      wrap.appendChild(card);
+    });
+  }
+
+  document.getElementById('om-orders-list').addEventListener('click', function(e){
+    var head = e.target.closest('.om-order-head');
+    if (!head) return;
+    var card = head.closest('.om-order');
+    var wasOpen = card.classList.contains('open');
+
+    card.classList.toggle('open');
+    if (!wasOpen){
+      var tlBody = card.querySelector('.om-tl-body');
+      if (tlBody.dataset.loaded) return;
+            frappe.call({
+                method: 'order_management.api.get_order_timeline',
+                args: { order_name: card.dataset.order },
+                callback: function(r){
+                if (!r.message){ tlBody.innerText = 'No history available.'; return; }
+                tlBody.dataset.loaded = '1';
+                tlBody.innerHTML = r.message.events.map(function(ev){
+                    let status;
+                    if (ev.status =="Draft"){
+                        status="Order Placed";
+                    }
+                    else{
+                        status = ev.status;
+                    }
+                    return '<div class="om-tl-item"><span class="om-tl-dot"></span>' +
+                    '<div><div class="om-tl-status">'+status+'</div>' +
+                    '<div class="om-tl-time">'+ new Date(ev.time).toLocaleString() +'</div></div></div>';
+                }).join('');
+                },
+                error: function(){ tlBody.innerText = 'Could not load timeline.'; }
+            });
+    }
+  });
+});
+</script>
+{% endblock %}

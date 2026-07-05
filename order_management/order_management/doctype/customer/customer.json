@@ -10,7 +10,8 @@
   "phone",
   "column_break_bnur",
   "email",
-  "status"
+  "status",
+  "code"
  ],
  "fields": [
   {
@@ -36,6 +37,11 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "Active\nInactive"
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code"
   },
   {
    "fieldname": "column_break_bnur",
