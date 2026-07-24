@@ -129,14 +129,51 @@
 frappe.ready(function(){
 
 
-  var CART_KEY = 'om_cart_v1';
-  var cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+  var CART_KEY = 'om_cart_guest';
+  var cart = {};
   var products = [];
+
+  function getCartKey(userInfo) {
+    if (userInfo && userInfo.logged_in && (userInfo.email || userInfo.user)) {
+      return 'om_cart_' + (userInfo.email || userInfo.user);
+    }
+    return 'om_cart_guest';
+  }
+
+  function initUserCart(userInfo) {
+    CART_KEY = getCartKey(userInfo);
+
+    if (userInfo && userInfo.logged_in) {
+      var guestCartRaw = localStorage.getItem('om_cart_guest');
+      if (guestCartRaw) {
+        try {
+          var guestCart = JSON.parse(guestCartRaw);
+          var userCart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+          Object.keys(guestCart).forEach(function(code) {
+            if (userCart[code]) {
+              userCart[code].qty += guestCart[code].qty;
+            } else {
+              userCart[code] = guestCart[code];
+            }
+          });
+          localStorage.setItem(CART_KEY, JSON.stringify(userCart));
+          localStorage.removeItem('om_cart_guest');
+        } catch(e) {}
+      }
+    }
+
+    cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+    updateCartBadge();
+    if (products.length) {
+      renderGrid(products);
+    }
+  }
 
   function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateCartBadge(); }
   function updateCartBadge(){
     var total = Object.values(cart).reduce(function(s,i){return s+i.qty;}, 0);
-    document.getElementById('om-cart-count').innerText = total;
+    var badge = document.getElementById('om-cart-count');
+    if (badge) badge.innerText = total;
   }
   function toast(msg){
     var t = document.getElementById('om-toast');
@@ -147,9 +184,11 @@ frappe.ready(function(){
   frappe.call({
     method: 'order_management.api.get_current_user_info',
     callback: function(r){
-      if (r.message && r.message.logged_in){
-        document.getElementById('om-greeting').innerText = 'Welcome back, ' + r.message.first_name + '.';
+      var info = (r && r.message) || { logged_in: false };
+      if (info.logged_in){
+        document.getElementById('om-greeting').innerText = 'Welcome back, ' + info.first_name + '.';
       }
+      initUserCart(info);
     }
   });
 
