@@ -80,10 +80,51 @@
 
 <script>
 frappe.ready(function(){
-  var CART_KEY = 'om_cart_v1';
-  var cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+  var CART_KEY = 'om_cart_guest';
+  var cart = {};
+
+  function getCartKey(userInfo) {
+    if (userInfo && userInfo.logged_in && (userInfo.email || userInfo.user)) {
+      return 'om_cart_' + (userInfo.email || userInfo.user);
+    }
+    return 'om_cart_guest';
+  }
+
+  function initUserCart(userInfo) {
+    CART_KEY = getCartKey(userInfo);
+
+    if (userInfo && userInfo.logged_in) {
+      var guestCartRaw = localStorage.getItem('om_cart_guest');
+      if (guestCartRaw) {
+        try {
+          var guestCart = JSON.parse(guestCartRaw);
+          var userCart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+          Object.keys(guestCart).forEach(function(code) {
+            if (userCart[code]) {
+              userCart[code].qty += guestCart[code].qty;
+            } else {
+              userCart[code] = guestCart[code];
+            }
+          });
+          localStorage.setItem(CART_KEY, JSON.stringify(userCart));
+          localStorage.removeItem('om_cart_guest');
+        } catch(e) {}
+      }
+    }
+
+    cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+    render();
+  }
 
   function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+  frappe.call({
+    method: 'order_management.api.get_current_user_info',
+    callback: function(r){
+      var info = (r && r.message) || { logged_in: false };
+      initUserCart(info);
+    }
+  });
 
   function render(){
     var linesEl = document.getElementById('om-lines');
@@ -190,8 +231,6 @@ frappe.ready(function(){
       }
     });
   }
-
-  render();
 });
 </script>
 {% endblock %}
